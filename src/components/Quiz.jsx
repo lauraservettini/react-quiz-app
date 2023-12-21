@@ -1,9 +1,9 @@
 import {useState, useCallback} from 'react';
 
 import QUESTIONS from '../question';
-import quizCompleteImg from '../assets/quiz-complete.png'
 import QuestionTimer from './QuestionTimer';
 import Answers from './Answers';
+import Summary from './Summary';
 
 export default function Quiz(){
     const [ answerState, setAnswerState ] = useState('');
@@ -15,11 +15,17 @@ export default function Quiz(){
     
     const quizIsComplete = activeQuestionIndex === QUESTIONS.length;
     
+    let timer = 10000;
+    
     const handleSelectAnswer = useCallback(function handleSelectAnswer(selectedAnswer){
         setAnswerState('answered');
         setAnswers((prevAnswers) => {
             return [...prevAnswers, selectedAnswer];
         });
+
+        if(selectedAnswer){
+            timer = 1000;
+        }
 
         // evidenzia per 1 sec se la risposta è giusta o sbagliata
         setTimeout(() => {
@@ -29,23 +35,22 @@ export default function Quiz(){
             else {
                 setAnswerState('wrong');
             }
-        setTimeout(() =>{
-            setAnswerState('');
-        }, 2000);
+  
+            setTimeout(() =>{
+                setAnswerState('');
+            }, 2000);
         }, 1000);
+
+        if(answerState === 'correct' || answerState === 'wrong'){
+            timer = 2000;
+        }
 
     }, [activeQuestionIndex]);
 
     const handleSkipAnswer = useCallback(() => handleSelectAnswer(null), [handleSelectAnswer]);
     
     if(quizIsComplete){
-        return (
-            <div id="summary">
-                <img src={quizCompleteImg} alt='Trophy icon'/>
-                <h2>Quiz Completed!</h2>
-            </div>
-
-        );
+        return <Summary answers={answers} />;
     } 
     
     return (
@@ -53,8 +58,9 @@ export default function Quiz(){
             <div id="question">
                 <QuestionTimer 
                     key={activeQuestionIndex}
-                    timeout={10000} 
-                    onTimeout={() => handleSkipAnswer(null)} />
+                    timeout={timer} 
+                    onTimeout={() => handleSkipAnswer(null)} 
+                    />
                 <h2>
                     {QUESTIONS[activeQuestionIndex].text}
                 </h2>
